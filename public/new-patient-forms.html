@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0D4F4F">
+<title>Urban Medical Center - Patient Intake</title>
+<link rel="icon" href="/favicon.ico">
+<link rel="preload" href="/forms/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<script>document.documentElement.classList.add('js');</script>
+<style>
+  /* Same variable DM Sans file the site ships through next/font (latin subset). */
+  @font-face {
+    font-family: 'DM Sans'; font-style: normal; font-weight: 100 1000; font-display: swap;
+    src: url('/forms/dm-sans-latin.woff2') format('woff2');
+  }
+  @font-face {
+    font-family: 'DM Sans Fallback'; src: local('Arial');
+    ascent-override: 94.9%; descent-override: 29.66%; line-gap-override: 0%; size-adjust: 104.53%;
+  }
+
+  :root {
+    --teal-900: #0A3D3D; --teal-700: #0D4F4F; --teal-500: #1A6B6B; --teal-50: #EBF4F4;
+    --coral-500: #E8704A; --coral-400: #F08060;
+    --ink-900: #1C2626; --ink-700: #2E3B3B; --ink-500: #4F5D5D;
+    --cream: #F7F4EE; --line: #E3E8E8;
+    /* Field borders need 3:1 against white (WCAG 1.4.11); this is 4.4:1. */
+    --field-border: #6F7C7C;
+    --shadow-raised: 0 1px 2px rgba(28, 38, 38, 0.05), 0 6px 20px rgba(13, 79, 79, 0.07);
+    --font: 'DM Sans', 'DM Sans Fallback', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  body {
+    font-family: var(--font); font-size: 1.0625rem; line-height: 1.5;
+    color: var(--ink-900); background: var(--cream);
+    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  }
+  img { display: block; max-width: 100%; height: auto; }
+  a { color: var(--teal-700); text-decoration: underline; text-underline-offset: 3px; }
+  a:hover { color: var(--teal-900); text-decoration-thickness: 2px; }
+  :focus-visible { outline: 3px solid var(--teal-700); outline-offset: 2px; border-radius: 4px; }
+
+  .skip-link {
+    position: absolute; left: 12px; top: -100px; z-index: 50;
+    background: #fff; color: var(--teal-700); font-weight: 600;
+    padding: 12px 16px; border-radius: 8px; box-shadow: var(--shadow-raised);
+  }
+  .skip-link:focus { top: 12px; }
+
+  /* ---------- Screen-only chrome ---------- */
+  .site-bar { background: #fff; border-bottom: 1px solid var(--line); }
+  .site-bar__inner, .intro, .toolbar__inner, .pages-wrapper, .end-actions {
+    width: 100%; max-width: calc(8.5in + 32px); margin: 0 auto; padding-left: 16px; padding-right: 16px;
+  }
+  .site-bar__inner {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px 20px;
+    flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px;
+  }
+  .brand {
+    display: inline-flex; align-items: center; gap: 12px; min-height: 48px;
+    color: var(--teal-700); text-decoration: none; font-weight: 700; font-size: 1.125rem;
+  }
+  .brand img { width: 50px; height: auto; }
+  .back-link {
+    display: inline-flex; align-items: center; min-height: 48px; padding: 0 4px;
+    font-weight: 600; font-size: 1rem;
+  }
+
+  .intro { padding-top: 32px; padding-bottom: 20px; }
+  .intro h1 {
+    font-size: clamp(1.75rem, 4.5vw, 2.5rem); line-height: 1.15; letter-spacing: -0.01em;
+    color: var(--teal-700); font-weight: 700; text-wrap: balance;
+  }
+  .instructions { margin-top: 12px; font-size: 1.0625rem; color: var(--ink-700); max-width: 40rem; }
+
+  .toolbar { position: relative; z-index: 10; padding: 8px 0 16px; }
+  .toolbar__inner { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    min-height: 52px; padding: 12px 22px; border-radius: 10px;
+    font: inherit; font-size: 1.0625rem; font-weight: 600; line-height: 1.2;
+    border: 2px solid transparent; cursor: pointer; text-decoration: none;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  /* Coral is the action colour and is always paired with dark ink (5.06:1). */
+  .btn--primary { background: var(--coral-500); color: var(--ink-900); }
+  .btn--primary:hover { background: var(--coral-400); }
+  .btn--secondary { background: #fff; color: var(--teal-700); border-color: var(--teal-700); }
+  .btn--secondary:hover { background: var(--teal-50); }
+  .btn--ghost { background: transparent; color: var(--teal-700); text-decoration: underline; text-underline-offset: 4px; }
+  .btn--ghost:hover { background: var(--teal-50); }
+  .btn:focus-visible { outline: 3px solid var(--teal-700); outline-offset: 3px; }
+  /* The buttons are print helpers; without JavaScript the browser's own
+     Print command still works, so hide controls that would do nothing. */
+  html:not(.js) .js-only { display: none !important; }
+
+  @media (min-width: 700px) {
+    html { scroll-padding-top: 104px; }
+    .toolbar {
+      position: sticky; top: 0; padding: 12px 0;
+      background: rgba(247, 244, 238, 0.96); border-bottom: 1px solid var(--line);
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    }
+    .toolbar__inner { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .toolbar__inner .btn--ghost { margin-left: auto; }
+  }
+
+  .pages-wrapper { display: flex; flex-direction: column; gap: 20px; padding-top: 16px; padding-bottom: 24px; }
+
+  /* ---------- Sheet (paper simulation on screen) ---------- */
+  .page {
+    background: #fff; border: 1px solid var(--line); border-radius: 14px;
+    box-shadow: var(--shadow-raised); padding: 24px 18px 28px;
+    min-width: 0;
+  }
+  @media (min-width: 600px) { .page { padding: 40px 40px 44px; } }
+
+  .sheet-no {
+    font-size: 1rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--ink-500); margin-bottom: 4px;
+  }
+
+  /* ---------- Letterhead ---------- */
+  .letterhead {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding-bottom: 18px; margin-bottom: 22px; border-bottom: 2px solid var(--teal-700);
+  }
+  .letterhead img { width: 62px; height: auto; flex: none; }
+  .letterhead__text { flex: 1 1 14rem; min-width: 0; }
+  .letterhead__name { font-size: 1.375rem; font-weight: 700; color: var(--teal-700); letter-spacing: 0.02em; line-height: 1.2; }
+  .addr { font-size: 1rem; color: var(--ink-500); line-height: 1.5; margin-top: 2px; overflow-wrap: anywhere; }
+  .addr a { color: inherit; }
+  .addr a, .instructions a { display: inline-block; padding: 2px 0; }
+  .nw { white-space: nowrap; }
+  /* On screen one letterhead is enough; every printed sheet carries its own. */
+  .page:not(#page1) .letterhead { display: none; }
+
+  .page-title {
+    font-size: clamp(1.375rem, 3.5vw, 1.625rem); line-height: 1.25; font-weight: 700;
+    color: var(--teal-700); letter-spacing: -0.005em; margin: 0 0 20px; text-wrap: balance;
+  }
+  .section-label {
+    font-size: 1.1875rem; line-height: 1.3; font-weight: 700; color: var(--teal-700);
+    margin: 30px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
+  }
+  .page > .section-label:first-of-type { margin-top: 8px; }
+
+  /* ---------- Fields ---------- */
+  .form-row {
+    display: flex; flex-wrap: wrap; align-items: flex-end;
+    gap: 16px; margin-bottom: 16px;
+  }
+  .form-group { flex: 1 1 9rem; display: flex; flex-direction: column; min-width: 0; }
+  .form-group.w2 { flex: 2 1 13rem; }
+  .form-group.w3 { flex: 1 1 100%; }
+  .form-group.w05 { flex: 0.5 1 6.5rem; }
+  .form-group label {
+    font-size: 1rem; font-weight: 600; color: var(--ink-700); line-height: 1.3; margin-bottom: 6px;
+  }
+  .form-group input, .form-group select {
+    width: 100%; min-height: 48px; padding: 10px 12px;
+    font: inherit; font-size: 1.0625rem; color: var(--ink-900);
+    background: #fff; border: 1.5px solid var(--field-border); border-radius: 8px;
+  }
+  .form-group input::placeholder { color: var(--ink-500); opacity: 1; }
+  .form-group select {
+    -webkit-appearance: none; appearance: none; padding-right: 40px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M3 6l5 5 5-5' fill='none' stroke='%230D4F4F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;
+  }
+  .form-group input:hover, .form-group select:hover { border-color: var(--teal-500); }
+  .form-group input:focus, .form-group select:focus {
+    outline: 3px solid var(--teal-700); outline-offset: 1px; border-color: var(--teal-700);
+  }
+  .form-group input[readonly] { background: var(--teal-50); border-style: dashed; }
+
+  /* ---------- Questions with choices ---------- */
+  fieldset { border: 0; min-width: 0; }
+  .question { margin: 0 0 20px; }
+  .question legend, .question-text {
+    font-size: 1.0625rem; font-weight: 600; color: var(--ink-900); line-height: 1.4;
+    margin-bottom: 10px; padding: 0;
+  }
+  .choices { display: flex; flex-wrap: wrap; gap: 10px; }
+  .choice {
+    display: inline-flex; align-items: center; gap: 12px;
+    min-height: 48px; padding: 8px 18px 8px 14px;
+    font-size: 1.0625rem; color: var(--ink-900); cursor: pointer;
+    background: #fff; border: 1.5px solid var(--field-border); border-radius: 10px;
+  }
+  .choice:hover { border-color: var(--teal-500); background: var(--teal-50); }
+  .choice:has(input:checked) { border-color: var(--teal-700); background: var(--teal-50); }
+  .choice input { width: 24px; height: 24px; flex: none; margin: 0; accent-color: var(--teal-700); cursor: pointer; }
+  .choice input:focus-visible { outline: 3px solid var(--teal-700); outline-offset: 3px; }
+  .choices--grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
+  .question .form-row { margin-top: 14px; margin-bottom: 0; }
+  .dyfs-fields { margin-top: -4px; }
+  .js .dyfs-fields:not(.is-open) { display: none; }
+
+  /* ---------- Consent copy ---------- */
+  .consent-text { font-size: 1.0625rem; line-height: 1.65; color: var(--ink-700); margin-bottom: 20px; max-width: 44rem; }
+  .consent-text p + p { margin-top: 14px; }
+  .consent-text ul { padding-left: 1.4em; }
+  .consent-text li { margin-bottom: 10px; padding-left: 4px; }
+  .consent-text li::marker { color: var(--teal-700); }
+  .consent-text strong { color: var(--ink-900); }
+
+  /* ---------- Signatures (signed on paper) ---------- */
+  .sig-row { display: flex; flex-wrap: wrap; gap: 20px 28px; margin-top: 28px; align-items: flex-end; }
+  .sig-block { flex: 2 1 14rem; min-width: 0; }
+  .sig-block.sig-sm { flex: 1 1 8rem; }
+  .sig-line { border-bottom: 2px solid var(--ink-700); height: 44px; }
+  .sig-label { font-size: 1rem; color: var(--ink-500); margin-top: 6px; }
+  .sig-row + .sig-row { margin-top: 18px; }
+
+  .doctor { margin-top: 32px; font-size: 1.0625rem; color: var(--ink-900); }
+
+  .end-actions { display: grid; gap: 10px; padding-top: 4px; padding-bottom: 48px; }
+  @media (min-width: 700px) { .end-actions { display: flex; justify-content: flex-end; } }
+
+  @media (max-width: 599px) {
+    /* The site bar already shows the logo; give the address the full width. */
+    .letterhead img { display: none; }
+  }
+
+  /* ---------- Print styles ---------- */
+  @media print {
+    html, body { margin: 0; padding: 0; background: #fff; }
+    body { font-size: 11pt; color: #000; }
+    .site-bar, .intro, .toolbar, .end-actions, .no-print, .skip-link { display: none !important; }
+    main, .pages-wrapper { display: block; max-width: none; padding: 0; margin: 0; }
+    /* Each sheet fits one letter page, so the packet is always 5 sheets. Pages
+       still FLOW rather than clip: the old fixed height + overflow:hidden
+       silently cut the emergency-contact address lines off the printout. */
+    .page {
+      position: relative; width: 8.5in; min-height: 0; margin: 0;
+      padding: 0.4in 0.55in; border: 0; border-radius: 0; box-shadow: none;
+      break-after: page; page-break-after: always;
+    }
+    .page:last-child { break-after: auto; page-break-after: auto; }
+    .page:not(#page1) .letterhead { display: flex; }
+
+    .form-row, .question, .choices, .form-group, .sig-row, .consent-text li {
+      break-inside: avoid; page-break-inside: avoid;
+    }
+    .section-label, .page-title { break-after: avoid; break-inside: avoid; }
+
+    .sheet-no {
+      position: absolute; top: 0.4in; right: 0.55in; margin: 0;
+      font-size: 10pt; font-weight: 600; letter-spacing: 0.04em; color: #444;
+    }
+
+    /* Header and titles */
+    .letterhead { flex-wrap: nowrap; gap: 14px; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 2px solid var(--teal-700); }
+    .letterhead img { width: 0.62in; }
+    .letterhead__name { font-size: 16pt; letter-spacing: 1px; }
+    .addr { font-size: 10pt; color: #333; margin-top: 1px; line-height: 1.35; }
+    .addr a { text-decoration: none; color: inherit; }
+    .page-title {
+      font-size: 14pt; text-align: center; text-transform: uppercase; letter-spacing: 0.5px;
+      margin: 8px 0 10px; padding-bottom: 5px; border-bottom: 1px solid #bbb;
+    }
+    .section-label {
+      font-size: 12pt; text-transform: uppercase; letter-spacing: 0.5px;
+      margin: 10px 0 5px; padding-bottom: 2px; border-bottom: 1px solid #ccc;
+    }
+    .page > .section-label:first-of-type { margin-top: 4px; }
+
+    /* Form labels and fields - 10-12pt for senior-friendly readability */
+    .form-row { flex-wrap: nowrap; gap: 10px; margin-bottom: 6px; }
+    #page1 .form-row { margin-bottom: 4px; }
+    .form-group, .form-group.w2, .form-group.w3, .form-group.w05 { flex-basis: 0; flex-grow: 1; flex-shrink: 1; }
+    .form-group.w2 { flex-grow: 2; }
+    .form-group.w3 { flex-grow: 3; }
+    .form-group.w05 { flex-grow: 0.5; }
+    .form-group label { font-size: 10pt; color: #333; margin-bottom: 1px; line-height: 1.25; }
+    .form-group input,
+    .form-group select {
+      min-height: 0; height: auto; font-size: 12pt; line-height: 1.3; color: #000;
+      padding: 3px 2px; border: 0; border-bottom: 1.5px solid #555 !important; border-radius: 0;
+      background: transparent !important; background-image: none !important;
+    }
+    .form-group input[readonly] { border-style: solid; }
+
+    /* Checkboxes, radios and question text */
+    .question { margin: 0 0 8px; }
+    .question legend, .question-text { font-size: 11pt; margin-bottom: 3px; color: #000; }
+    .question--inline legend { float: left; margin: 0 18px 0 0; line-height: 22px; }
+    .choices, .choices--grid { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+    .choice {
+      min-height: 0; padding: 0; gap: 6px; font-size: 11pt; color: #000;
+      border: 0; border-radius: 0; background: none !important; line-height: 22px;
+    }
+    .choice input { width: 14px; height: 14px; accent-color: #000; }
+    .question .form-row { margin-top: 4px; }
+    .dyfs-fields { margin-top: 0; }
+
+    /* Consent body copy */
+    .consent-text { font-size: 11pt; line-height: 1.5; color: #000; margin-bottom: 10px; max-width: none; text-align: justify; }
+    .consent-text p + p { margin-top: 11pt; }
+    .consent-text li { margin-bottom: 3px; }
+    .consent-text li::marker { color: #000; }
+    .consent-text strong { color: #000; }
+
+    /* Signature lines */
+    .sig-row { flex-wrap: nowrap; gap: 24px; margin-top: 18px; }
+    .sig-block { flex: 1 1 0; }
+    .sig-block.sig-sm { flex: 0.5 1 0; }
+    .sig-block.sig-rel { flex: 0.6 1 0; }
+    .sig-block.sig-date-sm { flex: 0.4 1 0; }
+    .sig-line { border-bottom: 1.5px solid #000; height: 28px; }
+    .sig-label { font-size: 10pt; color: #333; text-transform: uppercase; margin-top: 2px; }
+    .sig-row + .sig-row { margin-top: 14px; }
+    .doctor { margin-top: 30px; font-size: 11pt; color: #000; }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* Hide on-screen placeholder hints (e.g. "XXX-XX-XXXX") when printing */
+    input::placeholder { color: transparent !important; opacity: 0 !important; }
+    input::-webkit-input-placeholder { color: transparent !important; opacity: 0 !important; }
+    input::-moz-placeholder { color: transparent !important; opacity: 0 !important; }
+
+    /* Hide on-screen hints that are real element content, not placeholders:
+       selects resting on the "--" option and empty date inputs showing
+       "mm/dd/yyyy". Chrome's :placeholder-shown is unreliable for
+       <input type="date">, so a beforeprint script tags empty fields with
+       .print-empty (covers both toolbar buttons and Ctrl+P). Typed dates and
+       chosen options still print.
+       body.print-blank = "Print Blank Form" mode: hide ALL field content so
+       the printout is a clean form for handwriting. */
+    select.print-empty,
+    body.print-blank input,
+    body.print-blank select,
+    body.print-blank textarea {
+      color: transparent !important;
+    }
+    input[type="date"].print-empty::-webkit-datetime-edit,
+    input[type="date"].print-empty::-webkit-datetime-edit-fields-wrapper,
+    input[type="date"].print-empty::-webkit-datetime-edit-text,
+    input[type="date"].print-empty::-webkit-datetime-edit-month-field,
+    input[type="date"].print-empty::-webkit-datetime-edit-day-field,
+    input[type="date"].print-empty::-webkit-datetime-edit-year-field,
+    body.print-blank input[type="date"]::-webkit-datetime-edit,
+    body.print-blank input[type="date"]::-webkit-datetime-edit-fields-wrapper,
+    body.print-blank input[type="date"]::-webkit-datetime-edit-text,
+    body.print-blank input[type="date"]::-webkit-datetime-edit-month-field,
+    body.print-blank input[type="date"]::-webkit-datetime-edit-day-field,
+    body.print-blank input[type="date"]::-webkit-datetime-edit-year-field {
+      color: transparent !important; opacity: 0 !important;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="date"]::-webkit-inner-spin-button,
+    input[type="date"]::-webkit-clear-button { display: none !important; }
+
+    @page { size: letter; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#page1">Skip to the forms</a>
+
+<!-- ========== SITE BAR (screen only) ========== -->
+<header class="site-bar no-print">
+  <div class="site-bar__inner">
+    <a class="brand" href="/"><img src="/images/logo.png" alt="" width="50" height="40">Urban Medical Center</a>
+    <a class="back-link" href="/">&larr; Back to Website</a>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ========== INTRO + PRINT TOOLBAR (screen only) ========== -->
+<div class="intro no-print">
+  <h1>New Patient Forms</h1>
+  <p class="instructions">
+    Fill out and print, or print blank to complete by hand.<br>
+    Bring the completed form to the office at your visit, or fax it to (201) 332-7003.<br>
+    Questions? Call <a href="tel:+12013327077">(201) 332-7077</a>.
+  </p>
+</div>
+<div class="toolbar no-print js-only">
+  <div class="toolbar__inner">
+    <button type="button" class="btn btn--secondary" data-action="print-blank">Print Blank Form</button>
+    <button type="button" class="btn btn--primary" data-action="print-filled">Print Filled Form</button>
+    <button type="button" class="btn btn--ghost" data-action="clear">Clear All</button>
+  </div>
+</div>
+
+<div class="pages-wrapper">
+
+<!-- ========== PAGE 1: PATIENT INFORMATION ========== -->
+<section class="page" id="page1" aria-labelledby="p1Title">
+  <p class="sheet-no">Page 1 of 5</p>
+  <div class="letterhead">
+    <img src="/images/logo.png" alt="" width="62" height="50">
+    <div class="letterhead__text">
+      <p class="letterhead__name">Urban Medical Center</p>
+      <p class="addr">
+        95 Martin Luther King Drive, Jersey City, NJ 07305<br>
+        <span class="nw">Tel: <a href="tel:+12013327077">(201) 332-7077</a></span> &nbsp;|&nbsp; <span class="nw">Fax: (201) 332-7003</span> &nbsp;|&nbsp; info@urbanmds.com
+      </p>
+    </div>
+  </div>
+  <h2 class="page-title" id="p1Title">Patient Information</h2>
+
+  <div class="form-row">
+    <div class="form-group w2"><label for="lastName">Last Name</label><input type="text" id="lastName"></div>
+    <div class="form-group w2"><label for="firstName">First Name</label><input type="text" id="firstName"></div>
+    <div class="form-group"><label for="middleName">Middle</label><input type="text" id="middleName"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label for="dob">Date of Birth</label><input type="date" id="dob"></div>
+    <div class="form-group w05"><label for="gender">Gender</label>
+      <select id="gender"><option value="">--</option><option>Male</option><option>Female</option><option>Other</option></select>
+    </div>
+    <div class="form-group"><label for="ssn">Social Security No.</label><input type="text" id="ssn" placeholder="XXX-XX-XXXX" autocomplete="off"></div>
+    <div class="form-group w05"><label for="marital">Marital Status</label>
+      <select id="marital"><option value="">--</option><option>Single</option><option>Married</option><option>Divorced</option><option>Widowed</option><option>Other</option></select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group w3"><label for="address">Address</label><input type="text" id="address"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group w2"><label for="city">City</label><input type="text" id="city"></div>
+    <div class="form-group w05"><label for="state">State</label><input type="text" id="state" value="NJ"></div>
+    <div class="form-group"><label for="zip">Zip Code</label><input type="text" id="zip" inputmode="numeric"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label for="homePhone">Home Phone</label><input type="tel" id="homePhone"></div>
+    <div class="form-group"><label for="cellPhone">Cell Phone</label><input type="tel" id="cellPhone"></div>
+    <div class="form-group w2"><label for="email">Email</label><input type="email" id="email"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group w2"><label for="employer">Employer / School</label><input type="text" id="employer"></div>
+    <div class="form-group"><label for="workPhone">Work/School Phone</label><input type="tel" id="workPhone"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group w2"><label for="pharmacy">Preferred Pharmacy</label><input type="text" id="pharmacy"></div>
+    <div class="form-group"><label for="pharmPhone">Pharmacy Phone</label><input type="tel" id="pharmPhone"></div>
+  </div>
+
+  <h3 class="section-label">Race &amp; Ethnicity</h3>
+  <div class="form-row">
+    <div class="form-group"><label for="race">Race</label>
+      <select id="race">
+        <option value="">--</option>
+        <option>American Indian or Alaska Native</option>
+        <option>Asian</option>
+        <option>Black or African American</option>
+        <option>Native Hawaiian or Other Pacific Islander</option>
+        <option>White</option>
+        <option>Two or More Races</option>
+        <option>Decline to Answer</option>
+      </select>
+    </div>
+    <div class="form-group"><label for="ethnicity">Ethnicity</label>
+      <select id="ethnicity">
+        <option value="">--</option>
+        <option>Hispanic or Latino</option>
+        <option>Not Hispanic or Latino</option>
+        <option>Decline to Answer</option>
+      </select>
+    </div>
+    <div class="form-group"><label for="language">Language Preference</label>
+      <select id="language">
+        <option value="">--</option>
+        <option>English</option>
+        <option>Spanish</option>
+        <option>Other</option>
+      </select>
+    </div>
+  </div>
+
+  <h3 class="section-label">DYFS / Child Welfare</h3>
+  <fieldset class="question question--inline">
+    <legend>Does this patient have a DYFS case?</legend>
+    <div class="choices">
+      <label class="choice"><input type="radio" name="dyfs" value="no" checked> No</label>
+      <label class="choice"><input type="radio" name="dyfs" value="yes"> Yes</label>
+    </div>
+  </fieldset>
+  <div class="form-row dyfs-fields" id="dyfsFields">
+    <div class="form-group w2"><label for="dyfsOffice">DYFS Office / Address</label><input type="text" id="dyfsOffice"></div>
+    <div class="form-group"><label for="dyfsSW">Social Worker Name</label><input type="text" id="dyfsSW"></div>
+    <div class="form-group"><label for="dyfsPhone">Social Worker Phone</label><input type="tel" id="dyfsPhone"></div>
+  </div>
+
+  <h3 class="section-label">Guardian / Parent Information</h3>
+  <div class="form-row">
+    <div class="form-group w2"><label for="guardianName">Guardian/Parent Name</label><input type="text" id="guardianName"></div>
+    <div class="form-group"><label for="guardianRel">Relationship</label><input type="text" id="guardianRel"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label for="guardianSSN">SSN</label><input type="text" id="guardianSSN" autocomplete="off"></div>
+    <div class="form-group"><label for="guardianDOB">Date of Birth</label><input type="date" id="guardianDOB"></div>
+    <div class="form-group w05">
+      <label for="guardianPrimary">Primary Guardian?</label>
+      <select id="guardianPrimary"><option>Yes</option><option>No</option></select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group w3"><label for="guardianAddr">Address (if different)</label><input type="text" id="guardianAddr"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group w2"><label for="guardianCity">City</label><input type="text" id="guardianCity"></div>
+    <div class="form-group w05"><label for="guardianState">State</label><input type="text" id="guardianState"></div>
+    <div class="form-group"><label for="guardianZip">Zip</label><input type="text" id="guardianZip" inputmode="numeric"></div>
+    <div class="form-group w2"><label for="guardianEmail">Email</label><input type="email" id="guardianEmail"></div>
+  </div>
+
+</section>
+
+<!-- ========== PAGE 2: EMERGENCY CONTACT + INFORMED CONSENT ========== -->
+<!-- Emergency Contact lives here (not page 1) so each sheet fits 8.5x11
+     at readable font sizes without clipping. -->
+<section class="page" id="page2" aria-labelledby="p2Title">
+  <p class="sheet-no">Page 2 of 5</p>
+  <div class="letterhead">
+    <img src="/images/logo.png" alt="" width="62" height="50">
+    <div class="letterhead__text">
+      <p class="letterhead__name">Urban Medical Center</p>
+      <p class="addr">
+        95 Martin Luther King Drive, Jersey City, NJ 07305<br>
+        <span class="nw">Tel: (201) 332-7077</span> &nbsp;|&nbsp; <span class="nw">Fax: (201) 332-7003</span> &nbsp;|&nbsp; info@urbanmds.com
+      </p>
+    </div>
+  </div>
+  <h3 class="section-label">Emergency Contact</h3>
+  <div class="form-row">
+    <div class="form-group w2"><label for="emergName">Name</label><input type="text" id="emergName"></div>
+    <div class="form-group"><label for="emergRel">Relationship</label><input type="text" id="emergRel"></div>
+    <div class="form-group"><label for="emergPhone">Phone</label><input type="tel" id="emergPhone"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group w3"><label for="emergAddr">Address</label><input type="text" id="emergAddr"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group w2"><label for="emergCity">City</label><input type="text" id="emergCity"></div>
+    <div class="form-group w05"><label for="emergState">State</label><input type="text" id="emergState"></div>
+    <div class="form-group"><label for="emergZip">Zip</label><input type="text" id="emergZip" inputmode="numeric"></div>
+  </div>
+  <h2 class="page-title" id="p2Title">Informed Consent to Medical Service</h2>
+
+  <div class="form-row">
+    <div class="form-group w2"><label for="p2Name">Patient Full Name</label><input type="text" id="p2Name" class="auto-name"></div>
+    <div class="form-group"><label for="p2Dob">Date of Birth</label><input type="text" id="p2Dob" class="auto-dob"></div>
+    <div class="form-group"><label for="p2Today">Today's Date</label><input type="text" id="p2Today" class="auto-today"></div>
+  </div>
+
+  <div class="consent-text">
+    <p>I hereby authorize <strong>Urban Medical Center</strong> to treat me as necessary in their judgment.</p>
+    <p>The procedure(s) necessary to treat my condition has been explained to me by the staff and physicians of Urban Medical Center and I fully understand the nature of, and risks associated with, these procedure(s). I am aware that the practice of medical service is not exact and I acknowledge that no guarantees have been made to me as to results of this procedure(s), alternate methods and their consequences as well as the risks of refusing the described treatment(s) (if applicable) have been fully explained to me.</p>
+    <p>I understand that I have the right to ask questions about any proposed treatment or procedure, and that I may withdraw my consent at any time. I also understand that if I choose to refuse treatment, the risks associated with that refusal have been explained to me.</p>
+  </div>
+
+  <div class="sig-row">
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-label">Signature of Patient / Guardian</div>
+    </div>
+    <div class="sig-block sig-sm">
+      <div class="sig-line"></div>
+      <div class="sig-label">Date</div>
+    </div>
+  </div>
+  <div class="sig-row">
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-label">Witness Signature</div>
+    </div>
+    <div class="sig-block sig-sm">
+      <div class="sig-line"></div>
+      <div class="sig-label">Date</div>
+    </div>
+  </div>
+
+  <p class="doctor"><strong>Dr. Hyacinth Ucheagwu, MD</strong></p>
+</section>
+
+<!-- ========== PAGE 3: HIPAA CONSENT ========== -->
+<section class="page" id="page3" aria-labelledby="p3Title">
+  <p class="sheet-no">Page 3 of 5</p>
+  <div class="letterhead">
+    <img src="/images/logo.png" alt="" width="62" height="50">
+    <div class="letterhead__text">
+      <p class="letterhead__name">Urban Medical Center</p>
+      <p class="addr">
+        95 Martin Luther King Drive, Jersey City, NJ 07305<br>
+        <span class="nw">Tel: (201) 332-7077</span> &nbsp;|&nbsp; <span class="nw">Fax: (201) 332-7003</span> &nbsp;|&nbsp; info@urbanmds.com
+      </p>
+    </div>
+  </div>
+  <h2 class="page-title" id="p3Title">Patient Consent for Use and Disclosure of Health Information</h2>
+
+  <div class="form-row">
+    <div class="form-group w2"><label for="p3Name">Patient Full Name</label><input type="text" id="p3Name" class="auto-name"></div>
+    <div class="form-group"><label for="p3Dob">Date of Birth</label><input type="text" id="p3Dob" class="auto-dob"></div>
+    <div class="form-group"><label for="p3Today">Today's Date</label><input type="text" id="p3Today" class="auto-today"></div>
+  </div>
+
+  <div class="consent-text">
+    <ul>
+      <li>I hereby give my consent for Urban Medical Center to use and disclose protected health information about me to carry out treatment, payment, and health care operations (The Notice of Privacy provided by Urban Medical Center describes such uses and disclosures more completely).</li>
+      <li>I have the right to review the Notice of Privacy prior to signing this consent. Urban Medical Center reserves the right to revise its notice of privacy practices anytime. A revised notice of privacy practices may be obtained by forwarding a writing request to Urban Medical Center, 95 Martin Luther King Drive, Jersey City, NJ 07305.</li>
+      <li>With this consent, Urban Medical Center may call any home or other alternative location and leave a message on voice mail or in person in reference to any items that assist the practice in carrying out health care operations, such as appointment reminders, insurance items, and any calls pertaining to my clinical care, including laboratory test results, among others.</li>
+      <li>With this consent, Urban Medical Center may mail or e-mail to my home or other alternative location any items that assist the practice in carrying out health care operations, such as appointment reminders, patient statements, and reminder cards, as long as they are marked personal and confidential.</li>
+      <li>I have the right to request that Urban Medical Center restrict how it uses or discloses my personal health information to carry out health care operations. The practice is not required to agree to my request restrictions, but if it does, it is bound by this agreement.</li>
+      <li>By signing this form, I am consenting to allow Urban Medical Center to use or disclose my personal health information to carry out health care operations.</li>
+      <li>I may consent in writing except to the extent that the practice has already made disclosures in reliance upon my prior consent. If I do not sign this consent, or revoke it, Urban Medical Center may decline to provide treatment to me.</li>
+    </ul>
+  </div>
+
+  <div class="sig-row">
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-label">Signature of Patient / Guardian</div>
+    </div>
+    <div class="sig-block sig-sm sig-rel">
+      <div class="sig-line"></div>
+      <div class="sig-label">Relationship to Patient</div>
+    </div>
+    <div class="sig-block sig-sm sig-date-sm">
+      <div class="sig-line"></div>
+      <div class="sig-label">Date</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PAGE 4: ADVANCE DIRECTIVE ========== -->
+<section class="page" id="page4" aria-labelledby="p4Title">
+  <p class="sheet-no">Page 4 of 5</p>
+  <div class="letterhead">
+    <img src="/images/logo.png" alt="" width="62" height="50">
+    <div class="letterhead__text">
+      <p class="letterhead__name">Urban Medical Center</p>
+      <p class="addr">
+        95 Martin Luther King Drive, Jersey City, NJ 07305<br>
+        <span class="nw">Tel: (201) 332-7077</span> &nbsp;|&nbsp; <span class="nw">Fax: (201) 332-7003</span> &nbsp;|&nbsp; info@urbanmds.com
+      </p>
+    </div>
+  </div>
+  <h2 class="page-title" id="p4Title">Advance Directive &amp; Cultural Competency Assessment</h2>
+
+  <div class="form-row">
+    <div class="form-group w2"><label for="p4Name">Patient Full Name</label><input type="text" id="p4Name" class="auto-name"></div>
+    <div class="form-group"><label for="p4Dob">Date of Birth</label><input type="text" id="p4Dob" class="auto-dob"></div>
+    <div class="form-group"><label for="p4Today">Today's Date</label><input type="text" id="p4Today" class="auto-today"></div>
+  </div>
+
+  <h3 class="section-label">Advance Directive</h3>
+  <div class="consent-text">
+    <p>Advance directive is a federal and state Act. This allows the member to provide specific instruction regarding his or her medical care wishes if they ever became incapacitated. Insurance providers must ensure each member's medical record has documentation on how health services should be provided in an event when a member is unable to make a decision on their own behalf. Physicians who have a direct relationship with their patient are to provide a direct opportunity to discuss these types of decisions. All members who are 18 years of age and older must be asked and documented on their medical record for these type of services.</p>
+  </div>
+
+  <fieldset class="question">
+    <legend>1. Do you have an Advance Directive or Living Will? (For 18 years and older only)</legend>
+    <div class="choices">
+      <label class="choice"><input type="radio" name="advDirective" value="yes"> Yes</label>
+      <label class="choice"><input type="radio" name="advDirective" value="no"> No</label>
+    </div>
+  </fieldset>
+</section>
+
+<!-- ========== PAGE 5: CULTURAL COMPETENCY (continues page 4's assessment) ========== -->
+<!-- Page 4 used to overflow onto a fifth sheet mid-section; the break now
+     falls at the section boundary so every sheet fits one letter page. -->
+<section class="page" id="page5" aria-labelledby="p5Title">
+  <p class="sheet-no">Page 5 of 5</p>
+  <div class="letterhead">
+    <img src="/images/logo.png" alt="" width="62" height="50">
+    <div class="letterhead__text">
+      <p class="letterhead__name">Urban Medical Center</p>
+      <p class="addr">
+        95 Martin Luther King Drive, Jersey City, NJ 07305<br>
+        <span class="nw">Tel: (201) 332-7077</span> &nbsp;|&nbsp; <span class="nw">Fax: (201) 332-7003</span> &nbsp;|&nbsp; info@urbanmds.com
+      </p>
+    </div>
+  </div>
+  <h3 class="section-label" id="p5Title">Cultural Competency</h3>
+  <div class="consent-text">
+    <p>State of New Jersey mandates that every physician document any barrier to care (e.g. barriers can be cultural and/or religious custom, language, visual impairment, hearing deficit). Health ensures there members are provided with both clinical and non-clinical services are accessible and provided in a culturally competent manner. This means that all insurance providers must have a system in place that is responsive to the needs of the culturally diverse population that they service. Providers must provide services to members with a limited understanding of the English language, or a limited ability to read and write. Providers must also include ability to accommodate and provide health care needs to members with disabilities with physical and mental, ethical and cultural differences. Any factor affecting care that may impede the member's ability to understand medical discussion and/or impact the provider's ability to provide medical care; thus, requiring adjustments. The provider must have a method in place to assess these needs.</p>
+  </div>
+
+  <fieldset class="question">
+    <legend>1. Do you have any barriers to care? (Select all that apply)</legend>
+    <div class="choices choices--grid">
+      <label class="choice"><input type="checkbox" name="barrier" value="none"> No Barriers to Care</label>
+      <label class="choice"><input type="checkbox" name="barrier" value="language"> Language</label>
+      <label class="choice"><input type="checkbox" name="barrier" value="cultural"> Cultural/Religious Custom</label>
+      <label class="choice"><input type="checkbox" name="barrier" value="visual"> Visual Impairment</label>
+      <label class="choice"><input type="checkbox" name="barrier" value="hearing"> Hearing Deficit</label>
+      <label class="choice"><input type="checkbox" name="barrier" value="physical"> Physical Limitation</label>
+    </div>
+  </fieldset>
+
+  <fieldset class="question">
+    <legend>2. Do you have any religious or cultural customs the office should be aware of?</legend>
+    <div class="choices">
+      <label class="choice"><input type="radio" name="customs" value="no"> No</label>
+      <label class="choice"><input type="radio" name="customs" value="yes"> Yes</label>
+    </div>
+    <div class="form-row"><div class="form-group w3"><label for="customsDesc">If yes, please describe</label><input type="text" id="customsDesc"></div></div>
+  </fieldset>
+
+  <div class="question">
+    <p class="question-text" id="q3Text">3. Do you have any impairment the office should know about?</p>
+    <div class="form-row"><div class="form-group w3"><label for="impairmentDesc">Describe (vision, hearing, reading/writing, language, physical, cultural)</label><input type="text" id="impairmentDesc" aria-describedby="q3Text"></div></div>
+  </div>
+
+  <div class="consent-text">
+    <p><em>Note: If patient does not have any barriers to care, document "NO Barriers to Care" in the medical record.</em></p>
+  </div>
+
+  <div class="sig-row">
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-label">Signature of Patient / Guardian</div>
+    </div>
+    <div class="sig-block sig-sm sig-date-sm">
+      <div class="sig-line"></div>
+      <div class="sig-label">Date</div>
+    </div>
+  </div>
+</section>
+
+</div><!-- end pages-wrapper -->
+
+<div class="end-actions no-print js-only">
+  <button type="button" class="btn btn--secondary" data-action="print-blank">Print Blank Form</button>
+  <button type="button" class="btn btn--primary" data-action="print-filled">Print Filled Form</button>
+</div>
+
+</main>
+
+<script>
+  // ---- Auto-fill name/dob/date on pages 2-4 ----
+  // These fields are readonly only when this script runs; without JavaScript
+  // they stay typeable so the packet can still be filled in.
+  const firstNameEl = document.getElementById('firstName');
+  const lastNameEl = document.getElementById('lastName');
+  const dobEl = document.getElementById('dob');
+  document.querySelectorAll('.auto-name, .auto-dob, .auto-today').forEach(el => { el.readOnly = true; });
+
+  function updateAutoFields() {
+    const fullName = ((firstNameEl.value || '') + ' ' + (lastNameEl.value || '')).trim();
+    const dob = dobEl.value ? new Date(dobEl.value + 'T00:00:00').toLocaleDateString('en-US') : '';
+    const today = new Date().toLocaleDateString('en-US');
+
+    document.querySelectorAll('.auto-name').forEach(el => el.value = fullName);
+    document.querySelectorAll('.auto-dob').forEach(el => el.value = dob);
+    document.querySelectorAll('.auto-today').forEach(el => el.value = today);
+  }
+
+  firstNameEl.addEventListener('input', updateAutoFields);
+  lastNameEl.addEventListener('input', updateAutoFields);
+  dobEl.addEventListener('change', updateAutoFields);
+  updateAutoFields();
+
+  // ---- DYFS toggle ----
+  const dyfsFields = document.getElementById('dyfsFields');
+  function syncDyfs() {
+    const yes = document.querySelector('input[name="dyfs"][value="yes"]');
+    dyfsFields.classList.toggle('is-open', yes.checked);
+  }
+  document.querySelectorAll('input[name="dyfs"]').forEach(r => r.addEventListener('change', syncDyfs));
+  syncDyfs();
+  // Back/forward navigation can restore a checked "Yes" after this runs.
+  window.addEventListener('pageshow', syncDyfs);
+
+  // ---- Print helpers ----
+  // Tag empty selects/date inputs so print CSS can hide their on-screen hints
+  // ("--", "mm/dd/yyyy"). beforeprint fires for the toolbar buttons and Ctrl+P.
+  window.addEventListener('beforeprint', () => {
+    document.querySelectorAll('select').forEach(s => {
+      const opt = s.options[s.selectedIndex];
+      const t = opt ? opt.text.trim() : '';
+      s.classList.toggle('print-empty', t === '' || t === '--');
+    });
+    document.querySelectorAll('input[type="date"]').forEach(d => {
+      d.classList.toggle('print-empty', d.value === '');
+    });
+  });
+
+  function printFilled() { window.print(); }
+
+  // Print a fully blank form for handwriting: hide all field content and
+  // temporarily uncheck boxes/radios, restoring once the print dialog closes.
+  function printBlank() {
+    const checked = Array.from(
+      document.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked')
+    );
+    const printMql = window.matchMedia('print');
+    let restored = false;
+    const onPrintChange = (e) => { if (!e.matches) restore(); };
+    const restore = () => {
+      if (restored) return;
+      restored = true;
+      document.body.classList.remove('print-blank');
+      checked.forEach(el => { el.checked = true; });
+      window.removeEventListener('afterprint', restore);
+      printMql.removeEventListener('change', onPrintChange);
+      document.removeEventListener('pointerdown', restore, true);
+    };
+    checked.forEach(el => { el.checked = false; });
+    document.body.classList.add('print-blank');
+    window.addEventListener('afterprint', restore);
+    printMql.addEventListener('change', onPrintChange);
+    window.print();
+    // Browsers where print() returns immediately (iOS Safari) restore via
+    // afterprint / the print media change; the next tap is a last resort.
+    setTimeout(() => document.addEventListener('pointerdown', restore, true), 0);
+  }
+
+  // ---- Clear all ----
+  function clearAll() {
+    if (!confirm('Clear all fields?')) return;
+    document.querySelectorAll('input[type="text"], input[type="tel"], input[type="email"], input[type="date"]').forEach(el => {
+      if (!el.classList.contains('auto-today')) el.value = '';
+    });
+    document.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+    document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(el => el.checked = false);
+    document.getElementById('state').value = 'NJ';
+    updateAutoFields();
+    syncDyfs();
+  }
+
+  const actions = { 'print-blank': printBlank, 'print-filled': printFilled, 'clear': clearAll };
+  document.querySelectorAll('[data-action]').forEach(btn => {
+    btn.addEventListener('click', () => actions[btn.dataset.action]());
+  });
+</script>
+</body>
+</html>
