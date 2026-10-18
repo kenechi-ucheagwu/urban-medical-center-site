@@ -1,0 +1,554 @@
+@import "tailwindcss";
+
+/* ── Design tokens ─────────────────────────────────────────────────────
+   Warm, light editorial system. Deep teal anchors headings, links and
+   surfaces; coral is the action colour and is only ever paired with dark
+   ink (#E8704A on #1C2626 measures 5.06:1, the lighter hover 5.88:1).
+   Coral is never used for small text or white-on-coral fills.           */
+@theme inline {
+  --color-teal-900: #0A3D3D;
+  --color-teal-700: #0D4F4F;
+  --color-teal-500: #1A6B6B;
+  --color-teal-50: #EBF4F4;
+
+  --color-coral-500: #E8704A;
+  --color-coral-400: #F08060;
+  --color-coral-700: #B9471F;
+
+  --color-ink-900: #1C2626;
+  --color-ink-700: #2E3B3B;
+  --color-ink-500: #4F5D5D;
+
+  --color-cream: #F7F4EE;
+  --color-line: #E3E8E8;
+
+  --font-sans: var(--font-dm-sans);
+
+  --radius-card: 0.75rem;
+
+  /* The only two shadows in the system: portrait frame and visit card. */
+  --shadow-frame: 0 1px 2px rgba(28, 38, 38, 0.06), 0 12px 32px rgba(13, 79, 79, 0.10);
+  --shadow-raised: 0 1px 2px rgba(28, 38, 38, 0.05), 0 6px 20px rgba(13, 79, 79, 0.07);
+}
+
+:root {
+  --background: #F7F4EE;
+  --foreground: #2E3B3B;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-dm-sans, 'DM Sans', sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Must live in @layer base: an unlayered rule outranks every layered
+   Tailwind utility regardless of specificity, which would stop the
+   per-component focus-visible:outline-white overrides on the dark teal
+   surfaces (footer, utility bar, CTA bands) from ever applying. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid #0D4F4F;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+/* ── Type scale ────────────────────────────────────────────────────── */
+.type-display {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.type-section {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.type-eyebrow {
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Motion system ─────────────────────────────────────────────────────
+   One easing, one distance, one duration band. Everything below is a
+   progressive enhancement: the server HTML is already in its final visible
+   state, and every rule here is switched off under prefers-reduced-motion,
+   which browsers re-evaluate live when the OS setting changes.
+
+   These classes stay unlayered, matching the .svc-* and .type-* blocks in
+   this file. Nothing needs a Tailwind utility to beat them (unlike the
+   :focus-visible default above, which had to move into @layer base).      */
+
+@keyframes motionRise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.motion-rise {
+  animation: motionRise 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* Opening stagger in the home hero: portrait, then the visit card. The
+   headline and the Book/Call row deliberately do not animate. */
+.motion-delay-1 { animation-delay: 0.15s; }
+.motion-delay-2 { animation-delay: 0.3s; }
+
+/* ── Scroll reveal ────────────────────────────────────────────────────
+   `reveal-pending` is only ever added by Reveal.tsx, and only to elements
+   confirmed to be outside the viewport, so nothing is hidden on the server,
+   without JS, or on first paint. */
+.reveal-pending {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+.reveal-shown {
+  animation: motionRise 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* Pure-CSS safety net alongside the focusin handler in Reveal.tsx: focused
+   content is visible even before the script reacts. */
+.reveal-pending:focus-within {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Buttons: hover lift and press feedback ───────────────────────── */
+.btn-press {
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.12s ease;
+}
+.btn-press:hover {
+  transform: translateY(-1px);
+}
+.btn-press:active {
+  transform: translateY(0) scale(0.985);
+}
+
+/* ── Service rows: modest lift, border and arrow nudge ────────────── */
+.svc-row {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+.svc-row:hover,
+.svc-row:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-raised);
+}
+.svc-arrow {
+  transition: transform 0.2s ease;
+}
+.svc-row:hover .svc-arrow,
+.svc-row:focus-visible .svc-arrow {
+  transform: translateX(3px);
+}
+
+/* ── Mobile menu: animated open and close ─────────────────────────────
+   grid-template-rows 0fr -> 1fr avoids a hardcoded max-height. visibility
+   flips after the collapse finishes, which also keeps the closed panel out
+   of the tab order and the accessibility tree. */
+.menu-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    grid-template-rows 0.24s ease,
+    opacity 0.18s ease,
+    visibility 0s linear 0.24s;
+}
+.menu-panel > * {
+  overflow: hidden;
+  min-height: 0;
+}
+.menu-panel[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    grid-template-rows 0.24s ease,
+    opacity 0.18s ease,
+    visibility 0s;
+}
+/* The xl hide lives here rather than as an `xl:hidden` utility: this rule is
+   unlayered, so `display: grid` above would have silently outranked the
+   layered utility and left the panel live at desktop widths. */
+@media (min-width: 80rem) {
+  .menu-panel {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  .motion-rise,
+  .reveal-shown {
+    animation: none;
+  }
+  /* Never leave content stranded at opacity 0 if the setting flips
+     between Reveal.tsx observing an element and it scrolling into view. */
+  .reveal-pending {
+    opacity: 1;
+    transform: none;
+  }
+  .btn-press:hover,
+  .btn-press:active,
+  .svc-row:hover,
+  .svc-row:focus-visible {
+    transform: none;
+  }
+  .svc-row:hover .svc-arrow,
+  .svc-row:focus-visible .svc-arrow {
+    transform: none;
+  }
+  .menu-panel,
+  .menu-panel[data-open="true"] {
+    transition: none;
+  }
+}
+
+/* ── Services grid: animated icons ────────────────────────────────────
+   Triggers: .group:hover / .group:focus-visible (desktop) and .in-view
+   (added once by the IntersectionObserver wrapper on touch devices).
+   Every trigger plays a bounded number of iterations, never `infinite`, so
+   nothing loops decoratively while a pointer happens to rest on a card.
+   All of it is disabled under prefers-reduced-motion at the bottom. */
+
+.svc-icon-wrap {
+  transition: transform 0.25s ease, color 0.2s ease;
+}
+.group:hover .svc-icon-wrap,
+.group:focus-visible .svc-icon-wrap {
+  transform: translateY(-2px);
+}
+
+/* 1. Primary Care — EKG live monitor trace */
+.svc-ekg-base {
+  transition: opacity 0.3s ease;
+}
+.svc-ekg-trace {
+  opacity: 0;
+  stroke-dasharray: 12 34; /* 46 ≈ path length; 12-unit bright segment */
+}
+.svc-ekg-dot {
+  opacity: 0;
+}
+@supports (offset-path: path("M0 0")) {
+  .svc-ekg-dot {
+    offset-path: path("M2 12h4l3-9 6 18 3-9h4");
+  }
+}
+/* Dim and restore in step with the single sweep. A static opacity: 0.3 here
+   would leave the icon looking faded for the rest of the hover now that the
+   trace no longer loops. */
+.group:hover .svc-ekg-base,
+.group:focus-visible .svc-ekg-base {
+  animation: svc-ekg-base-dim 1.6s ease 1;
+}
+.group:hover .svc-ekg-trace,
+.group:focus-visible .svc-ekg-trace {
+  animation: svc-ekg-sweep 1.6s linear 1;
+}
+.group:hover .svc-ekg-dot,
+.group:focus-visible .svc-ekg-dot {
+  animation: svc-ekg-dot 1.6s linear 1;
+}
+.in-view .svc-ekg-base {
+  animation: svc-ekg-base-dim 4.8s ease forwards;
+}
+.in-view .svc-ekg-trace {
+  animation: svc-ekg-sweep 1.6s linear 3;
+}
+.in-view .svc-ekg-dot {
+  animation: svc-ekg-dot 1.6s linear 3;
+}
+@keyframes svc-ekg-sweep {
+  0%   { stroke-dashoffset: 12; opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { stroke-dashoffset: -34; opacity: 0; }
+}
+@keyframes svc-ekg-dot {
+  0%   { opacity: 0; offset-distance: 0%; }
+  6%   { opacity: 1; }
+  94%  { opacity: 1; }
+  100% { opacity: 0; offset-distance: 100%; }
+}
+@keyframes svc-ekg-base-dim {
+  0%   { opacity: 1; }
+  8%   { opacity: 0.3; }
+  90%  { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+/* 2. Pediatrics — tear drops, then the mouth cross-fades to a smile */
+.svc-tear {
+  opacity: 0;
+}
+.svc-mouth-smile {
+  opacity: 0;
+}
+.group:hover .svc-tear,
+.group:focus-visible .svc-tear,
+.in-view .svc-tear {
+  animation: svc-tear-drop 1.8s ease-in-out 1 forwards;
+}
+.group:hover .svc-mouth-sad,
+.group:focus-visible .svc-mouth-sad,
+.in-view .svc-mouth-sad {
+  animation: svc-mouth-sad-out 1.8s ease-in-out 1 forwards;
+}
+.group:hover .svc-mouth-smile,
+.group:focus-visible .svc-mouth-smile,
+.in-view .svc-mouth-smile {
+  animation: svc-mouth-smile-in 1.8s ease-in-out 1 forwards;
+}
+@keyframes svc-tear-drop {
+  0%   { opacity: 0; transform: translateY(0); }
+  12%  { opacity: 1; }
+  35%  { opacity: 1; transform: translateY(3px); }
+  50%, 100% { opacity: 0; transform: translateY(4.5px); }
+}
+@keyframes svc-mouth-sad-out {
+  0%, 45%  { opacity: 1; }
+  75%, 100% { opacity: 0; }
+}
+@keyframes svc-mouth-smile-in {
+  0%, 45%  { opacity: 0; }
+  75%, 100% { opacity: 1; }
+}
+
+/* 3. Walk-In Care — walk cycle (legs, arms, bob) */
+.svc-walk-leg-a,
+.svc-walk-leg-b,
+.svc-walk-arm-a,
+.svc-walk-arm-b {
+  transform-box: view-box;
+}
+.svc-walk-leg-a,
+.svc-walk-leg-b {
+  transform-origin: 12px 14px; /* hip */
+}
+.svc-walk-arm-a,
+.svc-walk-arm-b {
+  transform-origin: 12.3px 9.5px; /* shoulder */
+}
+.group:hover .svc-walk-leg-a,
+.group:focus-visible .svc-walk-leg-a {
+  animation: svc-leg-swing-a 0.7s ease-in-out 1;
+}
+.group:hover .svc-walk-leg-b,
+.group:focus-visible .svc-walk-leg-b {
+  animation: svc-leg-swing-b 0.7s ease-in-out 1;
+}
+.group:hover .svc-walk-arm-a,
+.group:focus-visible .svc-walk-arm-a {
+  animation: svc-arm-swing-b 0.7s ease-in-out 1; /* opposite the near leg */
+}
+.group:hover .svc-walk-arm-b,
+.group:focus-visible .svc-walk-arm-b {
+  animation: svc-arm-swing-a 0.7s ease-in-out 1;
+}
+.group:hover .svc-walker,
+.group:focus-visible .svc-walker {
+  animation: svc-walk-bob 0.7s ease-in-out 1;
+}
+/* Touch play-once: 3 cycles, then stop (keyframe pairs start/end at rest) */
+.in-view .svc-walk-leg-a { animation: svc-leg-swing-a 0.7s ease-in-out 3; }
+.in-view .svc-walk-leg-b { animation: svc-leg-swing-b 0.7s ease-in-out 3; }
+.in-view .svc-walk-arm-a { animation: svc-arm-swing-b 0.7s ease-in-out 3; }
+.in-view .svc-walk-arm-b { animation: svc-arm-swing-a 0.7s ease-in-out 3; }
+.in-view .svc-walker     { animation: svc-walk-bob 0.7s ease-in-out 3; }
+@keyframes svc-leg-swing-a {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(16deg); }
+  75%      { transform: rotate(-16deg); }
+}
+@keyframes svc-leg-swing-b {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(-16deg); }
+  75%      { transform: rotate(16deg); }
+}
+@keyframes svc-arm-swing-a {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(-12deg); }
+  75%      { transform: rotate(12deg); }
+}
+@keyframes svc-arm-swing-b {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(12deg); }
+  75%      { transform: rotate(-12deg); }
+}
+@keyframes svc-walk-bob {
+  0%, 50%, 100% { transform: translateY(0); }
+  25%, 75%      { transform: translateY(-0.7px); }
+}
+
+/* 4. Telehealth — screen turns on */
+.svc-screen-ekg {
+  opacity: 0;
+  stroke-dasharray: 20 20; /* 20 ≈ path length */
+  stroke-dashoffset: 20;
+}
+.svc-cam-dot {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.group:hover .svc-screen-ekg,
+.group:focus-visible .svc-screen-ekg,
+.in-view .svc-screen-ekg {
+  animation: svc-screen-draw 0.9s ease-out 0.15s 1 forwards;
+}
+.group:hover .svc-cam-dot,
+.group:focus-visible .svc-cam-dot {
+  opacity: 1;
+  animation: svc-cam-pulse 1.4s ease-in-out 0.4s 1;
+}
+.in-view .svc-cam-dot {
+  opacity: 1;
+  animation: svc-cam-pulse 1.4s ease-in-out 0.4s 3;
+}
+@keyframes svc-screen-draw {
+  from { opacity: 1; stroke-dashoffset: 20; }
+  to   { opacity: 1; stroke-dashoffset: 0; }
+}
+@keyframes svc-cam-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.25; }
+}
+
+/* 5. Lab Services — test tube fills, bubbles rise */
+.svc-lab-liquid {
+  transform: translateY(10px); /* parked below the clip until triggered */
+}
+.svc-lab-bubble-a,
+.svc-lab-bubble-b {
+  opacity: 0;
+}
+.group:hover .svc-lab-liquid,
+.group:focus-visible .svc-lab-liquid,
+.in-view .svc-lab-liquid {
+  animation: svc-liquid-rise 0.9s ease-out 1 forwards;
+}
+.group:hover .svc-lab-bubble-a,
+.group:focus-visible .svc-lab-bubble-a {
+  animation: svc-bubble-rise 1.6s ease-in 0.8s 1;
+}
+.group:hover .svc-lab-bubble-b,
+.group:focus-visible .svc-lab-bubble-b {
+  animation: svc-bubble-rise 1.6s ease-in 1.4s 1;
+}
+.in-view .svc-lab-bubble-a {
+  animation: svc-bubble-rise 1.6s ease-in 0.8s 2;
+}
+.in-view .svc-lab-bubble-b {
+  animation: svc-bubble-rise 1.6s ease-in 1.4s 2;
+}
+@keyframes svc-liquid-rise {
+  from { transform: translateY(10px); }
+  to   { transform: translateY(0); }
+}
+@keyframes svc-bubble-rise {
+  0%   { opacity: 0; transform: translateY(0); }
+  15%  { opacity: 0.9; }
+  75%  { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(-5px); }
+}
+
+/* 6. Pharmacy — subtle pill rattle */
+.svc-pill-a,
+.svc-pill-b {
+  transform-box: view-box;
+}
+.svc-pill-a {
+  transform-origin: 7.5px 16.5px;
+}
+.svc-pill-b {
+  transform-origin: 16.5px 7.5px;
+}
+.group:hover .svc-pill-a,
+.group:focus-visible .svc-pill-a {
+  animation: svc-pill-rattle 0.6s ease-in-out 1;
+}
+.group:hover .svc-pill-b,
+.group:focus-visible .svc-pill-b {
+  animation: svc-pill-rattle 0.6s ease-in-out 1 reverse;
+}
+.in-view .svc-pill-a {
+  animation: svc-pill-rattle 0.6s ease-in-out 3;
+}
+.in-view .svc-pill-b {
+  animation: svc-pill-rattle 0.6s ease-in-out 3 reverse;
+}
+@keyframes svc-pill-rattle {
+  0%, 100% { transform: rotate(0deg); }
+  20%      { transform: rotate(-3deg); }
+  40%      { transform: rotate(2.5deg); }
+  60%      { transform: rotate(-1.5deg); }
+  80%      { transform: rotate(1deg); }
+}
+
+/* Reduced motion: everything static, icons in their default state */
+@media (prefers-reduced-motion: reduce) {
+  .group:hover .svc-icon-wrap,
+  .group:focus-visible .svc-icon-wrap {
+    transform: none;
+  }
+  .svc-ekg-base,
+  .svc-ekg-trace,
+  .svc-ekg-dot,
+  .svc-tear,
+  .svc-mouth-sad,
+  .svc-mouth-smile,
+  .svc-walker,
+  .svc-walk-leg-a,
+  .svc-walk-leg-b,
+  .svc-walk-arm-a,
+  .svc-walk-arm-b,
+  .svc-screen-ekg,
+  .svc-cam-dot,
+  .svc-lab-liquid,
+  .svc-lab-bubble-a,
+  .svc-lab-bubble-b,
+  .svc-pill-a,
+  .svc-pill-b {
+    animation: none !important;
+  }
+  .svc-ekg-base,
+  .svc-mouth-sad {
+    opacity: 1 !important;
+  }
+  .svc-ekg-trace,
+  .svc-ekg-dot,
+  .svc-tear,
+  .svc-mouth-smile,
+  .svc-screen-ekg,
+  .svc-cam-dot,
+  .svc-lab-bubble-a,
+  .svc-lab-bubble-b {
+    opacity: 0 !important;
+  }
+}
